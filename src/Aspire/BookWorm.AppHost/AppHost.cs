@@ -2,9 +2,13 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 builder.AddAzureContainerAppEnvironment(Components.Azure.ContainerApp).ProvisionAsService();
 
+// Fixed credentials for local development to avoid container persistence issues
+var postgresUser = builder.AddParameter("postgres-user", secret: false);
+var postgresPassword = builder.AddParameter("postgres-password", secret: true);
+
 var postgres = builder
     .AddAzurePostgresFlexibleServer(Components.Postgres)
-    .WithPasswordAuthentication()
+    .WithPasswordAuthentication(postgresUser, postgresPassword)
     .WithIconName("HomeDatabase")
     .RunAsLocalContainer()
     .ProvisionAsService();
