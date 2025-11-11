@@ -36,6 +36,7 @@ help:
 # Restore NuGet packages and tools
 
 restore:
+    npm install
     dotnet restore
     dotnet tool restore
 

@@ -1,0 +1,19 @@
+{
+  "name": "bookworm",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BookWorm - Microservices-based bookstore platform",
+  "scripts": {
+    "lint:api": "spectral lint \"docs/eventcatalog/**/*.yml\" --fail-severity=warn",
+    "lint:openapi": "spectral lint \"docs/eventcatalog/openapi-files/*.yml\" --fail-severity=warn",
+    "lint:asyncapi": "spectral lint \"docs/eventcatalog/asyncapi-files/*.yml\" --fail-severity=warn",
+    "lint:api:fix": "spectral lint \"docs/eventcatalog/**/*.yml\" --fail-severity=error"
+  },
+  "devDependencies": {
+    "@stoplight/spectral-cli": "^6.13.1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
