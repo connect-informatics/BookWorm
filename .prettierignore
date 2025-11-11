@@ -1,0 +1,27 @@
+# C# files (formatted by CSharpier)
+*.cs
+
+# Biome-managed directories
+docs/eventcatalog/
+docs/docusaurus/
+
+# Build outputs
+node_modules/
+bin/
+obj/
+dist/
+build/
+
+# Generated files
+*.min.js
+*.min.css
+package-lock.json
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
