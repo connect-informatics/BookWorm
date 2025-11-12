@@ -21,11 +21,11 @@ jobs:
       - name: Delete untagged container images
         uses: actions/github-script@v7
         env:
-          PACKAGE_PREFIX: ${{ env.PACKAGE_PREFIX }}
-          CUTOFF_HOURS: ${{ env.CUTOFF_HOURS }}
+          PACKAGE_PREFIX: $${{ env.PACKAGE_PREFIX }}
+          CUTOFF_HOURS: $${{ env.CUTOFF_HOURS }}
         with:
           script: |
-            const org = context.repo.owner;
+            const owner = context.repo.owner;
             const packagePrefix = process.env.PACKAGE_PREFIX || '';
             const cutoffHours = parseInt(process.env.CUTOFF_HOURS) || 1;
             
@@ -33,19 +33,34 @@ jobs:
             cutoffDate.setHours(cutoffDate.getHours() - cutoffHours);
             
             console.log(`🔍 Configuration:`);
-            console.log(`   Organization: ${org}`);
+            console.log(`   Owner: ${owner}`);
             console.log(`   Package prefix: '${packagePrefix}' (empty = all packages)`);
             console.log(`   Cutoff: ${cutoffHours} hour(s) ago (${cutoffDate.toISOString()})`);
             console.log('');
             
-            console.log(`� Fetching all container packages for organization...`);
+            console.log(`📦 Fetching all container packages...`);
             
-            // Get all container packages for the organization
-            const { data: packages } = await github.rest.packages.listPackagesForOrganization({
-              package_type: 'container',
-              org: org,
-              per_page: 100
-            });
+            let packages;
+            try {
+              // Try organization API first
+              const orgResponse = await github.rest.packages.listPackagesForOrganization({
+                package_type: 'container',
+                org: owner,
+                per_page: 100
+              });
+              packages = orgResponse.data;
+              console.log(`   Using organization API`);
+            } catch (orgError) {
+              // Fall back to user API
+              console.log(`   Organization API failed, trying user API...`);
+              const userResponse = await github.rest.packages.listPackagesForUser({
+                package_type: 'container',
+                username: owner,
+                per_page: 100
+              });
+              packages = userResponse.data;
+              console.log(`   Using user API`);
+            }
             
             // Filter packages by prefix (if specified)
             const filteredPackages = packagePrefix 
@@ -66,13 +81,26 @@ jobs:
               console.log(`\n📦 Processing: ${packageName}`);
               
               try {
-                // Get all versions for this package
-                const { data: versions } = await github.rest.packages.getAllPackageVersionsForPackageOwnedByOrg({
-                  package_type: 'container',
-                  package_name: packageName,
-                  org: org,
-                  per_page: 100
-                });
+                // Try to get versions using organization API first
+                let versions;
+                try {
+                  const orgVersions = await github.rest.packages.getAllPackageVersionsForPackageOwnedByOrg({
+                    package_type: 'container',
+                    package_name: packageName,
+                    org: owner,
+                    per_page: 100
+                  });
+                  versions = orgVersions.data;
+                } catch (versionError) {
+                  // Fall back to user API
+                  const userVersions = await github.rest.packages.getAllPackageVersionsForPackageOwnedByUser({
+                    package_type: 'container',
+                    package_name: packageName,
+                    username: owner,
+                    per_page: 100
+                  });
+                  versions = userVersions.data;
+                }
                 
                 console.log(`   Found ${versions.length} total version(s)`);
                 
@@ -88,12 +116,24 @@ jobs:
                 // Delete each version
                 for (const version of toDelete) {
                   console.log(`   🗑️  Deleting version ${version.id} (updated: ${version.updated_at})`);
-                  await github.rest.packages.deletePackageVersionForOrg({
-                    package_type: 'container',
-                    package_name: packageName,
-                    org: org,
-                    package_version_id: version.id
-                  });
+                  
+                  try {
+                    await github.rest.packages.deletePackageVersionForOrg({
+                      package_type: 'container',
+                      package_name: packageName,
+                      org: owner,
+                      package_version_id: version.id
+                    });
+                  } catch (deleteError) {
+                    // Fall back to user API for deletion
+                    await github.rest.packages.deletePackageVersionForUser({
+                      package_type: 'container',
+                      package_name: packageName,
+                      username: owner,
+                      package_version_id: version.id
+                    });
+                  }
+                  
                   totalDeleted++;
                 }
                 
