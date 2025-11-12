@@ -74,10 +74,15 @@ jobs:
           fetch-depth: 0
 
       - name: Security Scan
-        uses: gitleaks/gitleaks-action@v1
+        uses: gitleaks/gitleaks-action@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          GITLEAKS_CONFIG: .gitleaks.toml
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: false
+          GITLEAKS_NOTIFY_USER_LIST: ""
+        with:
+          config-path: .gitleaks.toml
+          # Scansiona solo i file attuali, NON la git history
+          no-git: true
 
   format:
     name: Format
