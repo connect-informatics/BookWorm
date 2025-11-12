@@ -6,116 +6,15 @@ on:
   schedule:
     - cron: "0 0 * * *"
 
-env:
-  PACKAGE_PREFIX: "bookworm/"
-  CUTOFF_HOURS: 1
-
 jobs:
   delete-package-versions:
     name: Delete untagged package versions
     runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
     steps:
-      - name: Delete untagged container images
-        uses: actions/github-script@v7
-        env:
-          PACKAGE_PREFIX: $${{ env.PACKAGE_PREFIX }}
-          CUTOFF_HOURS: $${{ env.CUTOFF_HOURS }}
+      - uses: snok/container-retention-policy@v3.0.1
         with:
-          script: |
-            const owner = context.repo.owner;
-            const packagePrefix = process.env.PACKAGE_PREFIX || '';
-            const cutoffHours = parseInt(process.env.CUTOFF_HOURS) || 1;
-            
-            const cutoffDate = new Date();
-            cutoffDate.setHours(cutoffDate.getHours() - cutoffHours);
-            
-            console.log(`🔍 Configuration:`);
-            console.log(`   Owner: ${owner}`);
-            console.log(`   Package prefix: '${packagePrefix}' (empty = all packages)`);
-            console.log(`   Cutoff: ${cutoffHours} hour(s) ago (${cutoffDate.toISOString()})`);
-            console.log('');
-            
-            console.log(`📦 Fetching all container packages...`);
-            
-            let packages;
-            try {
-              // Try organization API first
-              const orgResponse = await github.rest.packages.listPackagesForOrganization({
-                package_type: 'container',
-                org: owner,
-                per_page: 100
-              });
-              packages = orgResponse.data;
-              console.log(`   Using organization API`);
-            } catch (orgError) {
-              console.error(`   ❌ Failed to fetch packages for organization: ${orgError.message}`);
-              console.log(`   This workflow requires organization-level package access.`);
-              console.log(`   Ensure the GITHUB_TOKEN has 'packages: write' permission for the organization.`);
-              throw orgError;
-            }
-            
-            // Filter packages by prefix (if specified)
-            const filteredPackages = packagePrefix 
-              ? packages.filter(pkg => pkg.name.startsWith(packagePrefix))
-              : packages;
-            
-            console.log(`   Found ${filteredPackages.length} package(s) matching filter`);
-            
-            if (filteredPackages.length === 0) {
-              console.log('⚠️  No packages found. Exiting.');
-              return;
-            }
-            
-            let totalDeleted = 0;
-            
-            for (const pkg of filteredPackages) {
-              const packageName = pkg.name;
-              console.log(`\n📦 Processing: ${packageName}`);
-              
-              try {
-                // Get versions using organization API
-                const orgVersions = await github.rest.packages.getAllPackageVersionsForPackageOwnedByOrg({
-                  package_type: 'container',
-                  package_name: packageName,
-                  org: owner,
-                  per_page: 100
-                });
-                const versions = orgVersions.data;
-                
-                console.log(`   Found ${versions.length} total version(s)`);
-                
-                // Filter untagged versions older than cutoff
-                const toDelete = versions.filter(v => {
-                  const isUntagged = !v.metadata?.container?.tags || v.metadata.container.tags.length === 0;
-                  const isOld = new Date(v.updated_at) < cutoffDate;
-                  return isUntagged && isOld;
-                });
-                
-                console.log(`   Found ${toDelete.length} untagged version(s) to delete`);
-                
-                // Delete each version
-                for (const version of toDelete) {
-                  console.log(`   🗑️  Deleting version ${version.id} (updated: ${version.updated_at})`);
-                  
-                  await github.rest.packages.deletePackageVersionForOrg({
-                    package_type: 'container',
-                    package_name: packageName,
-                    org: owner,
-                    package_version_id: version.id
-                  });
-                  
-                  totalDeleted++;
-                }
-                
-                if (toDelete.length === 0) {
-                  console.log(`   ✅ No versions to delete`);
-                }
-              } catch (error) {
-                console.error(`   ❌ Error processing ${packageName}:`, error.message);
-              }
-            }
-            
-            console.log(`\n✅ Cleanup complete! Deleted ${totalDeleted} version(s) across ${filteredPackages.length} package(s).`);
+          account: user
+          token: ${{ secrets.GITHUB_TOKEN }}
+          image-names: "bookworm/*"
+          tag-selection: untagged
+          cut-off: 1h
