@@ -1,20 +1,24 @@
 name: SonarQube Analysis
 run-name: SonarQube Analysis - ${{ github.actor }} (${{ github.ref_name }})
 
+# DISABLED: SonarCloud API has breaking changes causing 404 errors on /analysis/analyses endpoint
+# This affects all SonarScanner versions (9.x, 10.x, 11.x) both locally and in CI/CD
+# Re-enable when SonarSource fixes the API compatibility issue
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "src/**"
-      - "tests/**"
-      - ".github/workflows/sonar.yml"
-      - "!src/Aspire/BookWorm.AppHost/Container/**"
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
+  workflow_dispatch: # Manual trigger only
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - "src/**"
+  #     - "tests/**"
+  #     - ".github/workflows/sonar.yml"
+  #     - "!src/Aspire/BookWorm.AppHost/Container/**"
+  # pull_request:
+  #   types:
+  #     - opened
+  #     - synchronize
+  #     - reopened
 
 env:
   JAVA_VERSION: "25"
@@ -61,7 +65,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./.sonar/scanner
-          key: ${{ runner.os }}-sonar-scanner-10.0.0
+          key: ${{ runner.os }}-sonar-scanner-
           restore-keys: ${{ runner.os }}-sonar-scanner-
 
       - name: Install SonarCloud scanner
@@ -69,7 +73,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p .sonar/scanner
-          dotnet tool update dotnet-sonarscanner --tool-path .sonar/scanner --version 10.0.0
+          dotnet tool update dotnet-sonarscanner --tool-path .sonar/scanner
 
       - name: Sonarqube Begin
         run: >

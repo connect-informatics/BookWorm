@@ -50,23 +50,30 @@ npm run lint:asyncapi
 
 ### SonarQube Analysis
 
-#### CI/CD Analysis (Recommended)
+⚠️ **CURRENTLY DISABLED**: SonarQube analysis is temporarily disabled due to breaking changes in SonarCloud API.
 
-SonarQube analysis runs automatically on GitHub Actions for every push to `main` and on pull requests. **This is the recommended approach** due to current API limitations with local analysis.
+**Issue**: The `/analysis/analyses` endpoint returns `404` errors affecting all SonarScanner versions (9.x, 10.x, 11.x) both locally and in CI/CD. This is a known SonarCloud API compatibility issue.
 
-#### Local Analysis (Currently Limited)
+**Status**: 
+- ❌ Local analysis: **Disabled** (API 404 error)
+- ❌ CI/CD analysis: **Disabled** (workflow set to manual trigger only)
 
-⚠️ **Known Issue**: SonarCloud API currently has compatibility issues with recent SonarScanner versions, causing `404` errors on the `/analysis/analyses` endpoint. Local analysis may fail until this is resolved upstream.
+**Workaround**: The workflow can be manually triggered via GitHub Actions if needed, but will fail at the "Sonarqube End" step.
 
-If you still want to try local analysis:
+**Resolution**: Waiting for SonarSource to fix the API compatibility. The workflow will be re-enabled once the issue is resolved upstream.
 
-**Setup (One-time)**:
+<details>
+<summary>Setup Instructions (for when the issue is fixed)</summary>
+
+#### Local Analysis Setup
+
+**One-time setup**:
 
 ```bash
 # Install SonarScanner globally
-dotnet tool install --global dotnet-sonarscanner --version 10.0.0
+dotnet tool install --global dotnet-sonarscanner 
 
-# Configure token (see "Configure Local Secrets" section above)
+# Configure token
 cd src/Aspire/BookWorm.AppHost
 dotnet user-secrets set "Sonar:Token" "your-sonarcloud-token-here"
 ```
@@ -78,14 +85,7 @@ dotnet user-secrets set "Sonar:Token" "your-sonarcloud-token-here"
 .\scripts\run-sonar-analysis.ps1
 ```
 
-The script will:
-1. Verify `dotnet-sonarscanner` installation
-2. Read the SonarQube token from User Secrets (secure)
-3. Execute SonarScanner begin
-4. Build the solution
-5. Execute SonarScanner end (upload results to SonarCloud)
-
-**Note**: If the analysis fails with a `404` error, this is a known SonarCloud API issue. Please rely on the CI/CD pipeline for SonarQube analysis until resolved.
+</details>
 
 
 ## Common Issues
