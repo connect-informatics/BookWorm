@@ -9,7 +9,7 @@ export default defineConfig({
     keycloakify({
       themeName: "bookworm",
       themeVersion: "1.0.0",
-      groupId: "com.foxminchan.bookworm.keycloak",
+      groupId: "com.connect-informatics.bookworm.keycloak",
       artifactId: "keycloak-theme-bookworm",
       accountThemeImplementation: "none",
       keycloakifyBuildDirPath: "../themes",

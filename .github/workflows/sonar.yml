@@ -78,8 +78,8 @@ jobs:
       - name: Sonarqube Begin
         run: >
           .sonar/scanner/dotnet-sonarscanner begin
-          /k:"foxminchan_BookWorm"
-          /o:"foxminchan"
+          /k:"connect-informatics_BookWorm"
+          /o:"connect-informatics"
           /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
           /s:$GITHUB_WORKSPACE/SonarQube.Analysis.xml
 

@@ -8,10 +8,10 @@
     l'analisi completa (begin -> build -> end).
 
 .PARAMETER ProjectKey
-    Chiave del progetto SonarQube (default: foxminchan_BookWorm)
+    Chiave del progetto SonarQube (default: connect-informatics_BookWorm)
 
 .PARAMETER Organization
-    Organizzazione SonarQube (default: foxminchan)
+    Organizzazione SonarQube (default: connect-informatics)
 
 .PARAMETER BuildConfiguration
     Configurazione build (default: Release)
@@ -22,8 +22,8 @@
 #>
 
 param(
-    [string]$ProjectKey = "foxminchan_BookWorm",
-    [string]$Organization = "foxminchan",
+    [string]$ProjectKey = "connect-informatics_BookWorm",
+    [string]$Organization = "connect-informatics",
     [string]$BuildConfiguration = "Release"
 )
 
