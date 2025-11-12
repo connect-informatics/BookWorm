@@ -51,15 +51,10 @@ jobs:
               packages = orgResponse.data;
               console.log(`   Using organization API`);
             } catch (orgError) {
-              // Fall back to user API
-              console.log(`   Organization API failed, trying user API...`);
-              const userResponse = await github.rest.packages.listPackagesForUser({
-                package_type: 'container',
-                username: owner,
-                per_page: 100
-              });
-              packages = userResponse.data;
-              console.log(`   Using user API`);
+              console.error(`   ❌ Failed to fetch packages for organization: ${orgError.message}`);
+              console.log(`   This workflow requires organization-level package access.`);
+              console.log(`   Ensure the GITHUB_TOKEN has 'packages: write' permission for the organization.`);
+              throw orgError;
             }
             
             // Filter packages by prefix (if specified)
@@ -81,26 +76,14 @@ jobs:
               console.log(`\n📦 Processing: ${packageName}`);
               
               try {
-                // Try to get versions using organization API first
-                let versions;
-                try {
-                  const orgVersions = await github.rest.packages.getAllPackageVersionsForPackageOwnedByOrg({
-                    package_type: 'container',
-                    package_name: packageName,
-                    org: owner,
-                    per_page: 100
-                  });
-                  versions = orgVersions.data;
-                } catch (versionError) {
-                  // Fall back to user API
-                  const userVersions = await github.rest.packages.getAllPackageVersionsForPackageOwnedByUser({
-                    package_type: 'container',
-                    package_name: packageName,
-                    username: owner,
-                    per_page: 100
-                  });
-                  versions = userVersions.data;
-                }
+                // Get versions using organization API
+                const orgVersions = await github.rest.packages.getAllPackageVersionsForPackageOwnedByOrg({
+                  package_type: 'container',
+                  package_name: packageName,
+                  org: owner,
+                  per_page: 100
+                });
+                const versions = orgVersions.data;
                 
                 console.log(`   Found ${versions.length} total version(s)`);
                 
@@ -117,22 +100,12 @@ jobs:
                 for (const version of toDelete) {
                   console.log(`   🗑️  Deleting version ${version.id} (updated: ${version.updated_at})`);
                   
-                  try {
-                    await github.rest.packages.deletePackageVersionForOrg({
-                      package_type: 'container',
-                      package_name: packageName,
-                      org: owner,
-                      package_version_id: version.id
-                    });
-                  } catch (deleteError) {
-                    // Fall back to user API for deletion
-                    await github.rest.packages.deletePackageVersionForUser({
-                      package_type: 'container',
-                      package_name: packageName,
-                      username: owner,
-                      package_version_id: version.id
-                    });
-                  }
+                  await github.rest.packages.deletePackageVersionForOrg({
+                    package_type: 'container',
+                    package_name: packageName,
+                    org: owner,
+                    package_version_id: version.id
+                  });
                   
                   totalDeleted++;
                 }
