@@ -17,6 +17,15 @@ jobs:
         with:
           account: user
           token: ${{ secrets.GITHUB_TOKEN }}
-          image-names: "bookworm/*"
+          image-names: |
+            bookworm/apphost
+            bookworm/basket
+            bookworm/catalog
+            bookworm/chat
+            bookworm/finance
+            bookworm/notification
+            bookworm/ordering
+            bookworm/rating
+            bookworm/scheduler
           tag-selection: untagged
           cut-off: 1h
