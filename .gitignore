@@ -16,6 +16,10 @@ test-results/
 *.secrets
 .env
 
+# SonarQube
+.sonarqube/
+.sonar/
+
 # Draw.io Backup files
 *.drawio.backup.xml
 *.drawio.bkp

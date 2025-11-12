@@ -61,15 +61,15 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./.sonar/scanner
-          key: ${{ runner.os }}-sonar-scanner
-          restore-keys: ${{ runner.os }}-sonar-scanner
+          key: ${{ runner.os }}-sonar-scanner-10.0.0
+          restore-keys: ${{ runner.os }}-sonar-scanner-
 
       - name: Install SonarCloud scanner
         if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
         shell: bash
         run: |
           mkdir -p .sonar/scanner
-          dotnet tool update dotnet-sonarscanner --tool-path .sonar/scanner
+          dotnet tool update dotnet-sonarscanner --tool-path .sonar/scanner --version 10.0.0
 
       - name: Sonarqube Begin
         run: >

@@ -16,6 +16,7 @@
   "files.exclude": {
     "**/node_modules": true,
     "**/bin": true,
-    "**/obj": true
+    "**/obj": true,
+    "**/.sonarqube": true
   }
 }
