@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: snok/container-retention-policy@v3.0.1
         with:
-          account: user
+          account: connect-informatics
           token: ${{ secrets.GITHUB_TOKEN }}
           image-names: |
             bookworm/apphost
